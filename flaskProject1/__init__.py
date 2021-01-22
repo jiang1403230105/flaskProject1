@@ -1,6 +1,6 @@
 from flask import Flask
 
-from .static import account
+from .static.account import account
 
 def create_app():
     app=Flask(__name__)
