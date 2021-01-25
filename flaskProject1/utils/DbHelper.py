@@ -11,6 +11,7 @@ db_con.close()
 
 #创建数据连接
 def create_con():
+    db_con=pymysql.connect('localhost','root','jyj321','jyj','utf8')
     pass
 
 #关闭数据库
