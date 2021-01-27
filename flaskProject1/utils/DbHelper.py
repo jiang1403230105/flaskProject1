@@ -53,4 +53,32 @@ def create_table():
     data=cursor.fetchall()
     print(data)
     close_con(con,cursor)
-create_table()
+# create_table()
+
+def query():
+    # 查询“生物”课程比“物理”课程成绩高的所有学生的学号；
+    sql1="""select a.student_id,a.cname,a.num,b.cname,b.num from 
+    (select score.student_id,course.cname,score.num from score left join course on course.cid=score.course_id where course.cname='生物') as a
+    inner join 
+    (select score.student_id,course.cname,score.num from score left join course on course.cid=score.course_id where course.cname='物理') as b 
+    on a.student_id=b.student_id where a.num>b.num order by a.num desc """
+    # 查询平均成绩大于60分的同学的学号和平均成绩；
+    sql2="""select b.student_id, student.sname,b.s_avg_num from
+    (select student_id,avg(num) as s_avg_num from score group by student_id having s_avg_num>60) as b 
+    left join student on student.sid=b.student_id order by s_avg_num desc """
+    # 查询所有同学的学号、姓名、选课数、总成绩；
+    sql3="""select score.student_id,student.sname,count(score.course_id) as course_num,sum(num) as total_score from score 
+    left join student on student.sid=score.student_id group by score.student_id"""
+    # 查询姓“李”的老师的个数；
+    sql4="""select count(tname) from teacher where tname like '李%'"""
+    # 查询没学过“李平”老师课的同学的学号、姓名；
+    sql5="""select student.sid,student.sname from student where student.sid not in (select score.student_id from score left join course on course.cid=score.course_id where score.course_id in 
+    (select course.cid from course left join teacher on teacher.tid=course.teacher_id where teacher.tname like '李平%')
+    group by score.student_id)"""
+    con,cursor=create_con()
+    cursor.execute(sql5)
+    data=cursor.fetchall()
+    for item in data:
+        print(item)
+    close_con(con,cursor)
+query()
