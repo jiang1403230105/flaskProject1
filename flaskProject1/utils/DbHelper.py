@@ -75,8 +75,65 @@ def query():
     sql5="""select student.sid,student.sname from student where student.sid not in (select score.student_id from score left join course on course.cid=score.course_id where score.course_id in 
     (select course.cid from course left join teacher on teacher.tid=course.teacher_id where teacher.tname like '李平%')
     group by score.student_id)"""
+    # 查询学过“001”并且也学过编号“002”课程的同学的学号、姓名；
+    sql6="""select b.sid,b.sname from (select score.course_id,student.sid,student.sname from score 
+    left join student on student.sid=score.student_id where score.course_id between 1 and 2) as b group by b.sid """
+    # 查询学过“叶平”老师所教的所有课的同学的学号、姓名；
+    sql7="""select student.sid,student.sname from score left join student on student.sid=score.student_id where score.course_id in 
+    (select course.cid from course left join teacher on teacher.tid=course.teacher_id where teacher.tname like '李平%') group by student.sid 
+    having count(student_id)=2"""
+    # 查询课程编号“002”的成绩比课程编号“001”课程低的所有同学的学号、姓名；
+    sql8="""select a.sid,a.sname,a.num as score_2,b.num as score_1 from 
+    (select student.sid,student.sname,score.num from score left join student on student.sid=score.student_id where score.course_id=2) as a
+    inner join 
+    (select student.sid,student.sname,score.num from score left join student on student.sid=score.student_id where score.course_id=1) as b
+    on a.sid=b.sid where a.num<b.num"""
+    # 查询有课程成绩小于60分的同学的学号、姓名；
+    sql9="""select sid,sname from student where sid in (select score.student_id from score where score.num>60 group by score.student_id)"""
+    # 查询没有学全所有课的同学的学号、姓名；
+    sql10="""select sid, sname from student where sid in 
+    (select student_id from score group by student_id having count(course_id)!=(select count(cid) from course)"""
+    # 查询至少有一门课与学号为“001”的同学所学相同的同学的学号和姓名；
+    sql11="""select sid,sname from student where sid in 
+    (select score.student_id from score where course_id in 
+    (select score.course_id from score where student_id=1)
+    and student_id!=1 group by student_id)"""
+    # 查询和“002”号的同学学习的课程完全相同的其他同学学号和姓名；
+    sql12="""select sid,sname from student where sid in 
+    (select score.student_id from score where course_id in 
+    (select score.course_id from score where score.student_id=1)
+    and student_id !=1 group by student_id
+    having count(1)=(select count(score.course_id) from score where student_id=1))"""
+    # 向SC表中插入一些记录，这些记录要求符合以下条件：①没有上过编号“002”课程的同学学号；②插入“002”号课程的平均成绩；
+    sql13="""insert into score(student_id,course_id,num) select student_id ,2,(select avg(num) from score where course_id =2) from score where course_id!=2 group by student_id"""
+    # 按平均成绩从低到高显示所有学生的“语文”、“数学”、“英语”三门的课程成绩，按如下形式显示： 学生ID, 语文, 数学, 英语, 有效课程数, 有效平均分；
+    sql14="""select student_id as 学号,
+    ---(select num from score left join course on course.cid=score.course_id where course.cname='生物' and student_id = s1.student_id)as 生物,---
+    ---(select num from score left join course on course.cid=score.course_id where course.cname='物理' and student_id = s1.student_id)as 物理,---
+    (select num from score left join course on course.cid=score.course_id where course.cname='美术' and student_id = s1.student_id)as 美术
+    from score as s1 group by student_id"""
+    # 查询各科成绩最高和最低的分：以如下形式显示：课程ID，最高分，最低分；
+    sql15="""select score.course_id as 课程id,course.cname as 课程名称,max(score.num) as 最高分,min(score.num) as 最低分
+    from score left join course on score.course_id=course.cid group by course_id"""
+    # 按各科平均成绩从低到高和及格率的百分数从高到低顺序；
+    sql16="""select course_id,course.cname,avg(score.num) as avg_num from score left join course on score.course_id=course.cid group by score.course_id order by avg_num desc """
+    sql17="""select a.cid,a.cname,concat(round(b.s/a.ss*100,1),'%') as 及格率 from 
+    (select course.cid,course.cname,count(score.course_id) as ss from score left join course on course.cid=score.course_id group by course_id)as a 
+    inner join 
+    (select course_id,count(num)as s from score where score.num>60 group by course_id) as b 
+    on a.cid=b.course_id order by 及格率 desc """
+    sql18="""select course.cname,teacher.tname,xxx.avg_score from course 
+    left join teacher on teacher.tid=course.teacher_id
+    left join (select course_id,avg(num) as avg_score from score group by course_id)as xxx on xxx.course_id=course.cid
+    order by xxx.avg_score desc """
+    # 查询各科成绩前三名的记录: (不考虑成绩并列情况)
+    sql19="""select cid as 课程号,cname as 课程名称,
+    (select num from score as s2 where s1.cid=s2.course_id group by num order by num desc limit 0,1)as 第一,
+    (select num from score as s2 where s1.cid=s2.course_id group by num order by num desc limit 1,1)as 第二,
+    (select num from score as s2 where s1.cid=s2.course_id group by num order by num desc limit 2,1)as 第三
+    from course as s1"""
     con,cursor=create_con()
-    cursor.execute(sql5)
+    cursor.execute(sql19)
     data=cursor.fetchall()
     for item in data:
         print(item)
