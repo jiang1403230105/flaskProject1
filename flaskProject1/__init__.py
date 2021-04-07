@@ -2,6 +2,7 @@ from flask import Flask
 
 from flaskProject1.views.account import account
 from flaskProject1.views.index import index_page
+
 def create_app():
     app=Flask(__name__)
     app.config.from_object('settings.Config')#加载配置文件
