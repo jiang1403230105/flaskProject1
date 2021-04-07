@@ -1,4 +1,6 @@
-#常量文件
+#静态的变量
+
+DATABASE='jyj' #数据库名称
 
 #数据库链接参数
 LOCAL_HOST='localhost'
